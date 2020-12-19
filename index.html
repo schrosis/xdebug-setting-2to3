@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Xdebug setting 2to3</title>
+</head>
+<body>
+  <h1>Xdebug2の設定を3の設定に変換するやつ</h1>
+  <p>
+    細かいところはドキュメントを読むのじゃよ？
+    <a href="https://2.xdebug.org/docs/all_settings" target="_blank">Xdebug2</a>
+    <a href="https://xdebug.org/docs/all_settings" target="_blank">Xdebug3</a>
+    <a href="https://xdebug.org/docs/upgrade_guide" target="_blank">Upgrading from Xdebug 2 to 3</a>
+  </p>
+  <p>2時間くらいで雑に作ったからしっかりテストしてないのじゃ。バグがあったらすまん</p>
+  <p>なにかあっても責任はとらんぞ！</p>
+  <div>
+    <textarea id="xdebug2" style="display:block;width:100%;height:500px;padding:10px;box-sizing:border-box;" placeholder="xdebug2の設定をここへ入れるのじゃ"></textarea>
+    <button id="convert" style="display:block;width:100%;height:50px;">ここを押すのじゃ</button>    
+    <textarea id="xdebug3" style="display:block;width:100%;height:500px;padding:10px;box-sizing:border-box;" readonly></textarea>
+  </div>
+  <script>
+    window.addEventListener('load', () => {
+      const xdebug2DefaultSettings = {
+        "xdebug.auto_trace": "false",
+        "xdebug.cli_color": "0",
+        "xdebug.collect_assignments": "false",
+        "xdebug.collect_includes": "true",
+        "xdebug.collect_params": "0",
+        "xdebug.collect_return": "false",
+        "xdebug.collect_vars": "false",
+        "xdebug.coverage_enable": "true",
+        "xdebug.default_enable": "true",
+        "xdebug.dump.*": "Empty",
+        "xdebug.dump_globals": "true",
+        "xdebug.dump_once": "true",
+        "xdebug.dump_undefined": "false",
+        "xdebug.extended_info": "1",
+        "xdebug.file_link_format": "",
+        "xdebug.filename_format": "...%s%n",
+        "xdebug.force_display_errors": "0",
+        "xdebug.force_error_reporting": "0",
+        "xdebug.gc_stats_enable": "false",
+        "xdebug.gc_stats_output_dir": "/tmp",
+        "xdebug.gc_stats_output_name": "gcstats.%p",
+        "xdebug.halt_level": "0",
+        "xdebug.idekey": "*complex*",
+        "xdebug.manual_url": "http://www.php.net",
+        "xdebug.max_nesting_level": "256",
+        "xdebug.max_stack_frames": "-1",
+        "xdebug.overload_var_dump": "2",
+        "xdebug.profiler_aggregate": "0",
+        "xdebug.profiler_append": "0",
+        "xdebug.profiler_enable": "0",
+        "xdebug.profiler_enable_trigger": "0",
+        "xdebug.profiler_enable_trigger_value": "\"\"",
+        "xdebug.profiler_output_dir": "/tmp",
+        "xdebug.profiler_output_name": "cachegrind.out.%p",
+        "xdebug.remote_addr_header": "\"\"",
+        "xdebug.remote_autostart": "false",
+        "xdebug.remote_connect_back": "false",
+        "xdebug.remote_cookie_expire_time": "3600",
+        "xdebug.remote_enable": "false",
+        "xdebug.remote_handler": "dbgp",
+        "xdebug.remote_host": "localhost",
+        "xdebug.remote_log": "",
+        "xdebug.remote_log_level": "7",
+        "xdebug.remote_mode": "req",
+        "xdebug.remote_port": "9000",
+        "xdebug.remote_timeout": "200",
+        "xdebug.scream": "false",
+        "xdebug.show_error_trace": "0",
+        "xdebug.show_exception_trace": "0",
+        "xdebug.show_local_vars": "0",
+        "xdebug.show_mem_delta": "0",
+        "xdebug.trace_enable_trigger": "false",
+        "xdebug.trace_enable_trigger_value": "\"\"",
+        "xdebug.trace_format": "0",
+        "xdebug.trace_options": "0",
+        "xdebug.trace_output_dir": "/tmp",
+        "xdebug.trace_output_name": "trace.%c",
+        "xdebug.var_display_max_children": "128",
+        "xdebug.var_display_max_data": "512"
+      }
+      const xdebug3DefaultSettings = {
+        "xdebug.cli_color": "0",
+        "xdebug.client_discovery_header": "\"\"",
+        "xdebug.client_host": "localhost",
+        "xdebug.client_port": "9003",
+        "xdebug.collect_assignments": "false",
+        "xdebug.collect_params": "0",
+        "xdebug.collect_return": "false",
+        "xdebug.connect_timeout_ms": "200",
+        "xdebug.discover_client_host": "false",
+        "xdebug.dump.*": "Empty",
+        "xdebug.dump_globals": "true",
+        "xdebug.dump_once": "true",
+        "xdebug.dump_undefined": "false",
+        "xdebug.file_link_format": "",
+        "xdebug.filename_format": "...%s%n",
+        "xdebug.force_display_errors": "0",
+        "xdebug.force_error_reporting": "0",
+        "xdebug.gc_stats_output_name": "gcstats.%p",
+        "xdebug.halt_level": "0",
+        "xdebug.idekey": "*complex*",
+        "xdebug.log": "",
+        "xdebug.log_level": "7",
+        "xdebug.max_nesting_level": "256",
+        "xdebug.max_stack_frames": "-1",
+        "xdebug.mode": "develop",
+        "xdebug.output_dir": "/tmp",
+        "xdebug.profiler_append": "0",
+        "xdebug.profiler_output_name": "cachegrind.out.%p",
+        "xdebug.scream": "false",
+        "xdebug.show_error_trace": "0",
+        "xdebug.show_exception_trace": "0",
+        "xdebug.show_local_vars": "0",
+        "xdebug.start_upon_error": "default",
+        "xdebug.start_with_request": "default",
+        "xdebug.trace_format": "0",
+        "xdebug.trace_options": "0",
+        "xdebug.trace_output_name": "trace.%c",
+        "xdebug.trigger_value": "\"\"",
+        "xdebug.var_display_max_children": "128",
+        "xdebug.var_display_max_data": "512"
+      }
+
+      const isTruely = s => /(true|1)/gi.test(s)
+
+      const addMode = (s, m) => {
+        if (!s.includes(m)) s.push(m)
+      }
+
+      const convert = (i2, d3, d2) => i2 ?? (d2 === d3 ? undefined : d2)
+
+      const setWhenValueIsNotUndefined = (o, k, v) => {
+        if (typeof v !== 'undefined') o[k] = v
+      }
+
+      const potentialConflict = (k, l) => {
+        const values = Object.values(l)
+        switch ((new Set(values)).size) {
+          case 0:
+            return ''
+          case 1:
+            return `${k} = ${values[0]}`
+          default:
+            return [
+              ``,
+              `; ${k} はいずれか1つしか選択できないらしいぞ？`,
+              `; 優先したい設定の値を選ぶのじゃ！`,
+              `; 詳しいことはドキュメントを読んで確認するのじゃ`,
+              `; https://xdebug.org/docs/all_settings#${k}`,
+              l.map(([a, v]) => `; ${a} => v`).join("\n"),
+              `${k} = `,
+            ].join("\n")
+        }
+      }
+
+
+      document.getElementById('convert').addEventListener('click', () => {
+        const modes = []
+        const start_with_requests = {}
+        const output_dirs = {}
+        const trigger_values = {}
+        const removedSettings = []
+        const unknowns = {}
+        const inputSettings = Object.fromEntries(
+          document.getElementById('xdebug2').value
+            .split("\n")
+            .map(l => l.split('='))
+            .filter(l => l.length === 2)
+            .map(([k, v]) => [k.trim(), v.trim()])
+        )
+        const converted = []
+        Object.entries(xdebug2DefaultSettings).forEach(([k, v]) => {
+          switch (k) {
+            // mode
+            case 'xdebug.coverage_enable':
+              if (isTruely(inputSettings[k] ?? v)) addMode(modes, 'coverage')
+              break
+            case 'xdebug.default_enable':
+              if (isTruely(inputSettings[k] ?? v)) addMode(modes, 'develop')
+              break
+            case 'xdebug.gc_stats_enable':
+              if (isTruely(inputSettings[k] ?? v)) addMode(modes, 'gcstats')
+              break
+            case 'xdebug.profiler_enable':
+              if (isTruely(inputSettings[k] ?? v)) addMode(modes, 'profile')
+              break
+            case 'xdebug.remote_enable':
+              if (isTruely(inputSettings[k] ?? v)) addMode(modes, 'debug')
+              break
+              
+            // start_with_request
+            case 'xdebug.auto_trace':
+            case 'xdebug.remote_autostart':
+              if (isTruely(inputSettings[k])) {
+                start_with_requests[`${k}: ${inputSettings[k]}`] = 'yes'
+                break
+              }
+              if (isTruely(v) && v !== xdebug3DefaultSettings['xdebug.start_with_requests']) {
+                start_with_requests[`${k}: ${v}`] = 'yes'
+                break
+              }
+              break
+            case 'xdebug.profiler_enable_trigger':
+            case 'xdebug.trace_enable_trigger':
+              if (isTruely(inputSettings[k])) {
+                start_with_requests[`${k}: ${inputSettings[k]}`] = 'trigger'
+                break
+              }
+              if (isTruely(v) && v !== xdebug3DefaultSettings['xdebug.start_with_requests']) {
+                start_with_requests[`${k}: ${v}`] = 'trigger'
+                break
+              }
+              break
+            case 'xdebug.remote_mode': {
+              switch (inputSettings[k] ?? v) {
+                case 'req':
+                  start_with_requests[`${k}: ${inputSettings[k] ?? v}`] = isTruely(inputSettings['xdebug.remote_autostart'] ?? xdebug2DefaultSettings['xdebug.remote_autostart']) ? 'yes' : 'trigger'
+                  break
+                case 'jit':
+                  converted['xdebug.start_upon_error'] = 'yes'
+                  break
+              }
+              break
+            }
+                  
+
+            // output_dir
+            case 'xdebug.gc_stats_output_dir':
+            case 'xdebug.profiler_output_dir':
+            case 'xdebug.trace_output_dir':
+              setWhenValueIsNotUndefined(
+                output_dirs,
+                `${k}: ${inputSettings[k] ?? v}`,
+                convert(inputSettings[k], xdebug3DefaultSettings['xdebug.output_dir'], v)
+              )
+              break
+              
+            // trigger_value
+            case 'xdebug.profiler_enable_trigger_value':
+            case 'xdebug.trace_enable_trigger_value':
+              setWhenValueIsNotUndefined(
+                trigger_values,
+                `${k}: ${inputSettings[k] ?? v}`,
+                convert(inputSettings[k], xdebug3DefaultSettings['xdebug.trigger_value'], v)
+              )
+              break   
+
+            // remove
+            case 'xdebug.collect_includes':
+            case 'xdebug.collect_vars':
+            case 'xdebug.extended_info':
+            case 'xdebug.overload_var_dump':
+            case 'xdebug.remote_handler':
+            case 'xdebug.show_mem_delta':
+              if (typeof inputSettings[k] !== 'undefined') removedSettings.push(k)
+              break
+              
+            // change
+            case 'xdebug.remote_addr_header':
+              setWhenValueIsNotUndefined(
+                converted,
+                'xdebug.client_discovery_header',
+                convert(inputSettings[k], xdebug3DefaultSettings['xdebug.client_discovery_header'], v)
+              )
+              break
+            case 'xdebug.remote_connect_back':
+              setWhenValueIsNotUndefined(
+                converted,
+                'xdebug.discover_client_host',
+                convert(inputSettings[k], xdebug3DefaultSettings['xdebug.discover_client_host'], v)
+              )
+              break
+            case 'xdebug.remote_host':
+              setWhenValueIsNotUndefined(
+                converted,
+                'xdebug.client_host',
+                convert(inputSettings[k], xdebug3DefaultSettings['xdebug.client_host'], v)
+              )
+              break
+            case 'xdebug.remote_log':
+              setWhenValueIsNotUndefined(
+                converted,
+                'xdebug.log',
+                convert(inputSettings[k], xdebug3DefaultSettings['xdebug.log'], v)
+              )
+              break
+            case 'xdebug.remote_log_level':
+              setWhenValueIsNotUndefined(
+                converted,
+                'xdebug.log_level',
+                convert(inputSettings[k], xdebug3DefaultSettings['xdebug.log_level'], v)
+              )
+              break
+            case 'xdebug.remote_port':
+              setWhenValueIsNotUndefined(
+                converted,
+                'xdebug.client_port',
+                convert(inputSettings[k], xdebug3DefaultSettings['xdebug.client_port'], v)
+              )
+              break
+            case 'xdebug.remote_timeout':
+              setWhenValueIsNotUndefined(
+                converted,
+                'xdebug.connect_timeout_ms',
+                convert(inputSettings[k], xdebug3DefaultSettings['xdebug.connect_timeout_ms'], v)
+              )
+              break
+
+            default:
+              if (typeof xdebug3DefaultSettings[k] === 'undefined') {
+                if (typeof inputSettings[k] !== 'undefined') {
+                  unknowns[k] = v
+                }
+                break
+              }
+              setWhenValueIsNotUndefined(converted, k, convert(inputSettings[k], xdebug3DefaultSettings[k], v))
+              break
+          }
+        })
+        document.getElementById('xdebug3').value = [
+          `xdebug.mode=${modes.length === 0 ? 'off': modes.join(',')}`,
+          ...Object.entries(converted).map(([k, v]) => `${k} = ${v}`),
+          ...[
+            potentialConflict('xdebug.start_with_request', start_with_requests),
+            potentialConflict('xdebug.output_dir', output_dirs),
+            potentialConflict('xdebug.trigger_value', trigger_values),
+            removedSettings.length === 0 ? '' : ([
+              '',
+              '; 以下の項目は削除されたらしいぞ？',
+              '; 詳しいことはドキュメントを読んで確認するのじゃ',
+              ...removedSettings.map(k => `; ${k}\n;   https://xdebug.org/docs/upgrade_guide#removed-${k}`)
+            ].join("\n")),
+            Object.entries(unknowns).length === 0 ? '' : ([
+              '',
+              '; 以下の項目はアップグレードガイドに載ってないけどXdebug3の設定から消えたやつじゃ...',
+              ...Object.entries(unknowns).map(([k, v]) => `${k} = ${v}`)
+            ].join("\n"))
+          ].filter(v => v !== ''),
+        ].join("\n")
+      })
+    })
+  </script>
+</body>
+</html>
